@@ -1,0 +1,26 @@
+# DiarKeep — contoh blok Caddy.
+# Ganti domain dan path sesuai server. File ini hanya contoh; jangan ditimpa
+# langsung ke /etc/caddy/Caddyfile tanpa menggabungkan situs lain.
+
+http://keep.contoh.id {
+	root * /home/diarkeep/public
+	encode gzip zstd
+
+	# Cloudflare Zero Trust / Tunnel meneruskan HTTPS dari edge.
+	header {
+		X-Forwarded-Proto "https"
+		X-Forwarded-For {http.request.remote.host}
+		CF-Connecting-IP {http.request.remote.host}
+	}
+
+	# Jangan pernah mengeksekusi file di folder unggahan.
+	@blocked path /.* /uploads/*.php /uploads/*.phtml /uploads/*.phar
+	respond @blocked 404
+
+	php_fastcgi unix//run/php/php8.5-fpm.sock {
+		dial_timeout 30s
+		resolve_root_symlink
+	}
+
+	file_server
+}

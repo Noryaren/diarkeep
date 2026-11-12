@@ -1,0 +1,13 @@
+# Local configuration (contains database credentials)
+/config/config.php
+
+# User uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Scratch / runtime files
+/storage/*
+!/storage/.gitkeep
+*.log
+.DS_Store
+Thumbs.db
