@@ -173,11 +173,11 @@ declare(strict_types=1);
             <h2>Catatanmu tidak perlu ikut ke cloud orang lain.</h2>
             <p>
                 Semua disimpan di MariaDB milikmu. Kata sandi di-hash, akses divalidasi per akun,
-                dan setiap permintaan tulis dilindungi token CSRF.
+                dan setiap permintaan memakai token Bearer (JWT) yang hanya disimpan di browser.
             </p>
             <ul class="privacy-list">
                 <li><svg class="icon"><use href="#i-lock"></use></svg> Kata sandi memakai <code>password_hash</code> bawaan PHP.</li>
-                <li><svg class="icon"><use href="#i-shield"></use></svg> Catatan terisolasi per pengguna dan dilindungi CSRF.</li>
+                <li><svg class="icon"><use href="#i-shield"></use></svg> Catatan terisolasi per pengguna, tanpa cookie sesi.</li>
                 <li><svg class="icon"><use href="#i-upload"></use></svg> Gambar diperkecil di server, metadata dibuang.</li>
                 <li><svg class="icon"><use href="#i-server"></use></svg> Tanpa layanan pihak ketiga, tanpa telemetri.</li>
             </ul>

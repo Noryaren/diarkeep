@@ -10,10 +10,13 @@ return [
         'timezone'  => 'UTC',
         // Leave null to auto-detect from the front controller path.
         'base_path' => null,
-        // Set to true when the app sits behind a reverse proxy / Cloudflare Tunnel.
-        'trust_proxy' => true,
         'upload_max'  => 5 * 1024 * 1024,
         'upload_dir'  => dirname(__DIR__) . '/public/uploads',
+        // JWT signing key. Leave empty to auto-generate storage/jwt.secret.
+        // Set it explicitly (or via env JWT_SECRET) when running several instances.
+        'jwt_secret'  => getenv('JWT_SECRET') ?: '',
+        // Bearer token lifetime in seconds (default 1 tahun).
+        'token_ttl'   => 31536000,
     ],
 
     'db' => [

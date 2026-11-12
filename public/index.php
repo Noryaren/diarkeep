@@ -4,14 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/../app/bootstrap.php';
 
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-$uri    = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/';
-$base   = base_path();
-
-if ($base !== '' && str_starts_with($uri, $base)) {
-    $uri = substr($uri, strlen($base));
-}
-
-$uri = '/' . ltrim($uri, '/');
+$uri    = request_path();
 
 if ($uri === '/api' || str_starts_with($uri, '/api/')) {
     require __DIR__ . '/../app/api.php';

@@ -13,13 +13,16 @@ vanilla. Tidak ada build step, tidak ada layanan pihak ketiga.
 - Editor autosave, pintasan keyboard (`/` cari, `n` catatan baru).
 - Multi-user: akun dibuat dari server; setiap akun hanya bisa mengakses catatannya sendiri.
 - Tema terang/gelap, layout responsif, dan landing page.
-- Keamanan dasar: `password_hash`, prepared statement, CSRF token, CSP,
-  cookie `HttpOnly` + `SameSite`, validasi unggahan gambar.
+- Autentikasi stateless: JWT (HS256) lewat header `Authorization: Bearer`,
+  disimpan di `localStorage` — tanpa session/cookie sehingga aman di belakang
+  Cloudflare Tunnel yang membuang header `Set-Cookie`.
+- Keamanan dasar: `password_hash`, prepared statement, CSP,
+  validasi unggahan gambar.
 
 ## Kebutuhan server
 
 - PHP 8.5+ dengan ekstensi: `pdo_mysql`, `gd`, `mbstring`, `json`, `openssl`,
-  `fileinfo`, `session`.
+  `fileinfo`.
 - MariaDB 10.6+ / MySQL 8+ (boleh di Docker).
 - Web server yang bisa PHP-FPM (contoh: Caddy).
 - Ruang tulis untuk `public/uploads/`.
@@ -128,7 +131,9 @@ Catatan:
 - Gunakan `127.0.0.1`, bukan `localhost`, agar PDO memakai TCP ke port container.
 - `config/config.php` berisi kredensial dan **tidak boleh** masuk repository
   (sudah ada di `.gitignore`).
-- `trust_proxy` biarkan `true` jika di depan Cloudflare Tunnel/Zero Trust.
+- `token_ttl` mengatur umur token login (detik, default 1 tahun).
+  Cloudflare Tunnel/Zero Trust sudah menangani proteksi di edge, jadi tidak ada
+  rate limit login di aplikasi.
 - `debug` harus `false` di produksi.
 
 ### 4. Membuat akun
@@ -232,6 +237,17 @@ konfigurasi server, bukan setiap update aplikasi.
 
 ## Catatan keamanan
 
+- Autentikasi memakai JWT (HS256, TTL 1 tahun — bisa diubah lewat `token_ttl`;
+  tidak ada logout paksa berkali-kali). `POST /api/auth/login`
+  mengembalikan `token`; klien menyimpannya di `localStorage['diarkeep.token']`
+  lalu mengirim `Authorization: Bearer <token>` di setiap request API. Logout
+  hanya menghapus token dari `localStorage` (server tidak menyimpan state).
+- Tidak ada `session_start()`/`$_SESSION`/cookie sama sekali, jadi tidak ada
+  header `Set-Cookie` yang bisa dipangkas Cloudflare Tunnel. Karena itu CSRF
+  token berbasis sesi juga dihapus; tulisan data tetap aman karena endpoint
+  membutuhkan token yang ditandatangani dan CSP `connect-src 'self'`.
+- Secret JWT dibuat otomatis di `storage/jwt.secret` (atau isi `jwt_secret` /
+  env `JWT_SECRET`). Jangan hapus file itu — semua token akan tidak valid.
 - Pendaftaran publik dimatikan. Buat akun hanya lewat `bin/create-user.php`.
 - Jangan mengarahkan document root ke root proyek. Gunakan `public/`.
 - Folder `public/uploads/` hanya berisi gambar dengan nama acak; blokir eksekusi

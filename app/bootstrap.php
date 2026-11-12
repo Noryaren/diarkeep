@@ -14,23 +14,8 @@ ini_set('display_errors', config('app.debug') ? '1' : '0');
 ini_set('log_errors', '1');
 error_reporting(E_ALL);
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    ini_set('session.use_strict_mode', '1');
-    ini_set('session.use_only_cookies', '1');
-    ini_set('session.gc_maxlifetime', '2592000');
-
-    session_name('diarkeep_session');
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path'     => '/',
-        'domain'   => '',
-        'secure'   => request_is_https(),
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-
-    session_start();
-}
+// Stateless auth: no session_start(), no session cookie. The client sends
+// "Authorization: Bearer <token>" on every API request instead.
 
 if (!headers_sent()) {
     $nonce = csp_nonce();

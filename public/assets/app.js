@@ -72,13 +72,34 @@
         return '<svg class="icon" aria-hidden="true"><use href="#' + (ICONS[name] || name) + '"></use></svg>';
     }
 
+    var TOKEN_KEY = 'diarkeep.token';
+
+    function getToken() {
+        try {
+            return localStorage.getItem(TOKEN_KEY) || '';
+        } catch (error) {
+            return '';
+        }
+    }
+
+    function clearToken() {
+        try {
+            localStorage.removeItem(TOKEN_KEY);
+        } catch (error) {}
+    }
+
+    function goToLogin() {
+        window.location.replace(base + '/');
+    }
+
     function api(path, options) {
         options = options || {};
         var method = options.method || 'GET';
         var headers = { 'Accept': 'application/json' };
 
-        if (method !== 'GET') {
-            headers['X-CSRF-Token'] = CONFIG.csrf || '';
+        var token = getToken();
+        if (token) {
+            headers['Authorization'] = 'Bearer ' + token;
         }
 
         var body;
@@ -93,10 +114,13 @@
         return fetch(base + '/api' + path, {
             method: method,
             headers: headers,
-            body: body,
-            credentials: 'same-origin'
+            body: body
         }).then(function (response) {
             return response.json().catch(function () { return {}; }).then(function (data) {
+                if (response.status === 401) {
+                    clearToken();
+                    goToLogin();
+                }
                 if (!response.ok) {
                     var error = new Error(data.error || 'Terjadi kesalahan. Coba lagi.');
                     error.status = response.status;
@@ -1586,7 +1610,25 @@
         try {
             await api('/auth/logout', { method: 'POST' });
         } catch (error) {}
+        clearToken();
         window.location.href = base + '/';
+    }
+
+    function applyUser(user) {
+        if (!user) {
+            return;
+        }
+
+        var name  = String(user.name || '').trim();
+        var email = String(user.email || '').trim();
+        var parts = name ? name.split(/\s+/) : [];
+        var first = parts.length ? parts[0].charAt(0) : (email ? email.charAt(0) : '');
+        var last  = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+        var initials = (first + last).toUpperCase() || '··';
+
+        $$('[data-user-initials]').forEach(function (node) { node.textContent = initials; });
+        $$('[data-user-name]').forEach(function (node) { node.textContent = name || email; });
+        $$('[data-user-email]').forEach(function (node) { node.textContent = email; });
     }
 
     function openNewNote() {
@@ -1834,6 +1876,11 @@
     }
 
     function init() {
+        if (!getToken()) {
+            goToLogin();
+            return;
+        }
+
         el.notesArea = $('#notesArea');
         el.pageTitle = $('#pageTitle');
         el.pageSubtitle = $('#pageSubtitle');
@@ -1860,6 +1907,11 @@
 
         wireGlobalEvents();
         wireEditorEvents();
+
+        api('/me').then(function (data) {
+            applyUser(data.user);
+        }).catch(function () {});
+
         loadNotes();
     }
 

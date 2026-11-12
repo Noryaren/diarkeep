@@ -1,14 +1,12 @@
 <?php
 declare(strict_types=1);
-
-$user = current_user();
 ?>
 <header class="appbar">
     <div class="appbar-left">
         <button class="icon-btn only-mobile" type="button" id="menuBtn" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false">
             <svg class="icon"><use href="#i-menu"></use></svg>
         </button>
-        <a class="brand" href="<?= e(url('/')) ?>" aria-label="DiarKeep">
+        <a class="brand" href="<?= e(url('/app')) ?>" aria-label="DiarKeep">
             <span class="brand-mark"><img src="<?= e(url('/assets/logo.svg')) ?>" alt="" width="30" height="30"></span>
             <span class="brand-word">Diar<strong>Keep</strong></span>
         </a>
@@ -36,14 +34,14 @@ $user = current_user();
 
         <div class="user-menu">
             <button class="avatar" type="button" id="userBtn" aria-label="Menu akun" aria-haspopup="true" aria-expanded="false">
-                <?= e(user_initials($user)) ?>
+                <span data-user-initials>··</span>
             </button>
             <div class="menu-popover user-popover" id="userPopover" hidden>
                 <div class="user-card">
-                    <span class="avatar avatar-lg"><?= e(user_initials($user)) ?></span>
+                    <span class="avatar avatar-lg" data-user-initials>··</span>
                     <div>
-                        <strong><?= e($user['name']) ?></strong>
-                        <span><?= e($user['email']) ?></span>
+                        <strong data-user-name>…</strong>
+                        <span data-user-email>…</span>
                     </div>
                 </div>
                 <div class="menu-separator"></div>

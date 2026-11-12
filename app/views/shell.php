@@ -1,20 +1,19 @@
 <?php
 declare(strict_types=1);
 
-$user    = current_user();
-$isApp   = $user !== null;
-$nonce   = csp_nonce();
-$name    = (string) config('app.name', 'DiarKeep');
+// The app shell lives on /app. It is rendered without a user identity: the
+// browser only carries the token in localStorage, so the SPA loads /api/me.
+$isApp     = request_path() === '/app';
+$nonce     = csp_nonce();
+$name      = (string) config('app.name', 'DiarKeep');
 $pageTitle = $isApp
     ? $name . ' — Catatanmu'
     : $name . ' — Catatan pribadi di server sendiri';
 
 $clientConfig = [
     'base'      => base_path(),
-    'csrf'      => csrf_token(),
     'uploadMax' => (int) config('app.upload_max'),
-    'user'      => $user,
-    'version'   => '1.0.0',
+    'version'   => '1.1.0',
 ];
 ?>
 <!doctype html>

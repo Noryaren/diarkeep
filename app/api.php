@@ -785,30 +785,16 @@ function api_delete_attachment(int $attachmentId): void
 
 function api_login(): void
 {
-    verify_csrf();
     $input = json_input();
 
     $email    = mb_strtolower(trim((string) ($input['email'] ?? '')));
     $password = (string) ($input['password'] ?? '');
-
-    $now      = time();
-    $attempts = array_values(array_filter(
-        is_array($_SESSION['login_attempts'] ?? null) ? $_SESSION['login_attempts'] : [],
-        static fn ($time) => is_int($time) && $time > $now - 300
-    ));
-
-    if (count($attempts) >= 8) {
-        throw new ApiException('Terlalu banyak percobaan masuk. Tunggu beberapa menit lalu coba lagi.', 429);
-    }
 
     $stmt = db()->prepare('SELECT * FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
     if (!$user || !password_verify($password, (string) $user['password_hash'])) {
-        $attempts[]                 = $now;
-        $_SESSION['login_attempts'] = $attempts;
-        usleep(300000);
         throw new ApiException('Email atau kata sandi salah.', 401);
     }
 
@@ -817,9 +803,18 @@ function api_login(): void
             ->execute([password_hash($password, PASSWORD_DEFAULT), $user['id']]);
     }
 
-    login_user((int) $user['id']);
+    $token = login_user((int) $user['id']);
 
-    json_response(['ok' => true, 'user' => current_user()]);
+    json_response([
+        'ok'    => true,
+        'token' => $token,
+        'user'  => [
+            'id'         => (int) $user['id'],
+            'name'       => $user['name'],
+            'email'      => $user['email'],
+            'created_at' => $user['created_at'],
+        ],
+    ]);
 }
 
 function api_health(): void
@@ -851,19 +846,15 @@ function api_dispatch(string $method, string $path): void
         }
 
         if ($method === 'POST' && $path === '/auth/logout') {
-            verify_csrf();
-            logout_user();
+            // Stateless: the server keeps no token state, the browser drops it.
             json_response(['ok' => true]);
         }
 
+        // Everything below requires a valid "Authorization: Bearer <token>".
         $user = require_user();
 
         if ($method === 'GET' && $path === '/me') {
             json_response(['user' => $user]);
-        }
-
-        if ($method !== 'GET') {
-            verify_csrf();
         }
 
         if ($method === 'GET' && $path === '/notes') {

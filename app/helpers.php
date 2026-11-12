@@ -15,9 +15,10 @@ function config(?string $key = null, mixed $default = null): mixed
                 'debug'       => filter_var(getenv('APP_DEBUG') ?: '0', FILTER_VALIDATE_BOOL),
                 'timezone'    => 'UTC',
                 'base_path'   => null,
-                'trust_proxy' => filter_var(getenv('TRUST_PROXY') ?: '1', FILTER_VALIDATE_BOOL),
                 'upload_max'  => 5 * 1024 * 1024,
                 'upload_dir'  => ROOT_PATH . '/public/uploads',
+                'jwt_secret'  => getenv('JWT_SECRET') ?: '',
+                'token_ttl'   => 31536000,
             ],
             'db' => [
                 'dsn'  => getenv('DB_DSN') ?: 'mysql:host=127.0.0.1;port=3306;dbname=diarkeep;charset=utf8mb4',
@@ -95,33 +96,35 @@ function url(string $path = ''): string
     return base_path() . ($path === '/' ? '/' : $path);
 }
 
+/**
+ * Requested path with the base path prefix removed, always starting with "/".
+ */
+function request_path(): string
+{
+    static $path = null;
+
+    if ($path !== null) {
+        return $path;
+    }
+
+    $uri  = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/';
+    $base = base_path();
+
+    if ($base !== '' && str_starts_with($uri, $base)) {
+        $uri = substr($uri, strlen($base));
+    }
+
+    $path = '/' . ltrim($uri, '/');
+
+    return $path;
+}
+
 function upload_url(?string $filename): string
 {
     if ($filename === null || $filename === '') {
         return '';
     }
     return url('/uploads/' . rawurlencode($filename));
-}
-
-function request_is_https(): bool
-{
-    if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
-        return true;
-    }
-
-    if (config('app.trust_proxy')) {
-        $proto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
-        if ($proto === 'https') {
-            return true;
-        }
-
-        $cf = (string) ($_SERVER['HTTP_CF_VISITOR'] ?? '');
-        if ($cf !== '' && str_contains($cf, '"scheme":"https"')) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 function csp_nonce(): string
