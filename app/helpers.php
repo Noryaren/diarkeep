@@ -97,6 +97,17 @@ function url(string $path = ''): string
 }
 
 /**
+ * Asset URL with a file mtime version query so CDN caches pick up changes immediately.
+ */
+function asset_url(string $path): string
+{
+    $file = dirname(__DIR__) . '/public' . '/' . ltrim($path, '/');
+    $ver  = @filemtime($file);
+
+    return url($path) . ($ver !== false ? '?v=' . $ver : '');
+}
+
+/**
  * Requested path with the base path prefix removed, always starting with "/".
  */
 function request_path(): string

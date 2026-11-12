@@ -43,7 +43,7 @@ $clientConfig = [
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="<?= e(url('/assets/app.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('/assets/app.css')) ?>">
     <script nonce="<?= e($nonce) ?>">
         window.DIAR = <?= json_encode($clientConfig, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
     </script>
@@ -56,6 +56,6 @@ $clientConfig = [
         <div class="noscript-banner">DiarKeep butuh JavaScript untuk editor catatannya. Aktifkan JavaScript lalu muat ulang halaman.</div>
     </noscript>
 
-    <script src="<?= e(url($isApp ? '/assets/app.js' : '/assets/landing.js')) ?>" nonce="<?= e($nonce) ?>" defer></script>
+    <script src="<?= e(asset_url($isApp ? '/assets/app.js' : '/assets/landing.js')) ?>" nonce="<?= e($nonce) ?>" defer></script>
 </body>
 </html>

@@ -597,10 +597,10 @@
         renderChecks();
         renderAttachments();
         renderEditorLabels();
-        autosize(el.editorBody());
+        autosize(editorBody());
 
         window.setTimeout(function () {
-            var title = el.editorTitle();
+            var title = editorTitle();
             if (title) {
                 title.focus();
                 title.setSelectionRange(title.value.length, title.value.length);
@@ -709,8 +709,9 @@
             return;
         }
         textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 460) + 'px';
-        textarea.style.overflowY = textarea.scrollHeight > 460 ? 'auto' : 'hidden';
+        var max = Math.max(160, window.innerHeight - 240);
+        textarea.style.height = Math.min(textarea.scrollHeight, max) + 'px';
+        textarea.style.overflowY = textarea.scrollHeight > max ? 'auto' : 'hidden';
     }
 
     function updateEditorType() {
@@ -1819,7 +1820,12 @@
             }
         }, true);
 
-        window.addEventListener('resize', closePopover);
+        window.addEventListener('resize', function () {
+            closePopover();
+            if (el.editorModal && el.editorModal.classList.contains('is-open')) {
+                autosize(editorBody());
+            }
+        });
 
         window.addEventListener('beforeunload', function (event) {
             if (state.dirty) {
