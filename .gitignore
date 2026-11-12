@@ -12,3 +12,6 @@
 .DS_Store
 Thumbs.db
 .commandcode/
+
+# File iseng
+/iseng.txt
