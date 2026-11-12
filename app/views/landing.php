@@ -11,6 +11,7 @@ declare(strict_types=1);
         <a href="#fitur">Fitur</a>
         <a href="#alur">Cara pakai</a>
         <a href="#privasi">Privasi</a>
+        <a href="https://achmad.diaraji.my.id">Profil Diar</a>
     </nav>
 
     <div class="nav-actions">
