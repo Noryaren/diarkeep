@@ -39,6 +39,10 @@ declare(strict_types=1);
                     Masuk ke catatan
                     <svg class="icon"><use href="#i-arrow-right"></use></svg>
                 </button>
+                <a class="btn btn-outline btn-lg" href="https://github.com/Noryaren/diarkeep">
+                    Start now
+                    <svg class="icon"><use href="#i-arrow-right"></use></svg>
+                </a>
                 <a class="btn btn-outline btn-lg" href="#fitur">Lihat fiturnya</a>
             </div>
 
@@ -82,15 +86,6 @@ declare(strict_types=1);
             <article class="mock-note mock-pink mock-d">
                 <p class="mock-quote">“Catat dulu.<br>Rapikan nanti.<br>Tenang kemudian.”</p>
             </article>
-
-            <div class="server-chip">
-                <span class="server-chip-dot"></span>
-                <div>
-                    <strong>serverdiar</strong>
-                    <span>online · 1.2 GB terpakai</span>
-                </div>
-                <svg class="icon"><use href="#i-server"></use></svg>
-            </div>
         </div>
     </section>
 
