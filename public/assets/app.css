@@ -1693,19 +1693,15 @@ kbd {
 }
 
 .notes-grid {
-    column-count: 4;
-    column-gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
 }
 
 /* ---------- note cards ---------- */
 
 .note-card {
-    display: inline-block;
-    width: 100%;
-    margin: 0 0 16px;
     padding: 15px 16px 14px;
-    break-inside: avoid;
-    -webkit-column-break-inside: avoid;
     background: var(--n-bg, var(--surface));
     border: 1px solid var(--n-line, var(--line));
     border-radius: 16px;
@@ -1973,8 +1969,9 @@ kbd {
 }
 
 .skeleton-grid {
-    column-count: 4;
-    column-gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
 }
 
 .skeleton-card {
@@ -2635,10 +2632,6 @@ kbd {
 }
 
 @media (max-width: 1200px) {
-    .notes-grid,
-    .skeleton-grid {
-        column-count: 3;
-    }
 }
 
 @media (max-width: 1024px) {
@@ -2694,11 +2687,6 @@ kbd {
     .cta-band {
         flex-direction: column;
         align-items: flex-start;
-    }
-
-    .notes-grid,
-    .skeleton-grid {
-        column-count: 2;
     }
 }
 
@@ -2806,8 +2794,7 @@ kbd {
 
     .notes-grid,
     .skeleton-grid {
-        column-count: 2;
-        column-gap: 12px;
+        gap: 12px;
     }
 
     .note-card {
@@ -2857,10 +2844,6 @@ kbd {
         font-size: .78rem;
     }
 
-    .notes-grid,
-    .skeleton-grid {
-        column-count: 1;
-    }
 
     .label-more {
         opacity: 1;
