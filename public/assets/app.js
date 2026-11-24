@@ -34,6 +34,8 @@
     var el = {};
     var ICONS = {
         check: 'i-check',
+        save: 'i-save',
+        code: 'i-code',
         pin: 'i-pin',
         note: 'i-note',
         search: 'i-search',
@@ -390,6 +392,20 @@
             '</div>';
     }
 
+    function renderNoteBody(text) {
+        if (!text) {
+            return '';
+        }
+        var escaped = esc(text);
+        escaped = escaped.replace(/```([\s\S]*?)```/g, function (match, code) {
+            return '<pre class="note-code-block"><code>' + code.trim() + '</code></pre>';
+        });
+        escaped = escaped.replace(/`([^`]+)`/g, function (match, code) {
+            return '<code class="note-inline-code">' + code + '</code>';
+        });
+        return '<div class="note-body">' + escaped + '</div>';
+    }
+
     function noteCard(note) {
         var actions = '';
 
@@ -407,7 +423,7 @@
 
         var pin = note.pinned ? '<span class="note-pin" title="Disematkan">' + icon('pin') + '</span>' : '';
         var title = note.title ? '<h3 class="note-title">' + esc(note.title) + '</h3>' : '';
-        var body = note.body ? '<p class="note-body">' + esc(note.body) + '</p>' : '';
+        var body = note.body ? renderNoteBody(note.body) : '';
         var image = '';
 
         if (note.attachments && note.attachments.length) {
@@ -628,6 +644,7 @@
             '<div class="editor-top">' +
             '<button class="icon-btn editor-pin' + (draft.pinned ? ' is-active' : '') + '" type="button" data-ed="pin" title="Sematkan catatan" aria-pressed="' + draft.pinned + '">' + icon('pin') + '</button>' +
             '<span class="editor-state" id="editorState"></span>' +
+            '<button class="btn btn-primary btn-sm" type="button" data-ed="save" style="margin-left: auto; margin-right: 6px;">' + icon('save') + ' Simpan</button>' +
             '<button class="icon-btn editor-close" type="button" data-ed="close" aria-label="Tutup editor">' + icon('x') + '</button>' +
             '</div>' +
             '<input class="editor-title" id="editorTitle" type="text" maxlength="255" placeholder="Judul" value="' + esc(draft.title) + '" autocomplete="off">' +
@@ -643,6 +660,7 @@
             '<button class="editor-tool" type="button" data-ed="color" title="Warna catatan">' + icon('palette') + '</button>' +
             '<button class="editor-tool" type="button" data-ed="label" title="Label">' + icon('tag') + '</button>' +
             '<button class="editor-tool" type="button" data-ed="image" title="Tambah gambar">' + icon('image') + '</button>' +
+            '<button class="editor-tool" type="button" data-ed="code" title="Tambahkan blok kode">' + icon('code') + '</button>' +
             '<button class="editor-tool' + (listMode ? ' is-active' : '') + '" type="button" data-ed="type" title="' + (listMode ? 'Matikan checklist' : 'Jadikan checklist') + '">' + icon('list') + '</button>' +
             '<button class="editor-tool' + (draft.archived ? ' is-active' : '') + '" type="button" data-ed="archive" title="' + (draft.archived ? 'Keluarkan dari arsip' : 'Arsipkan') + '">' + icon('archive') + '</button>' +
             '<button class="editor-tool' + (draft.trashed ? ' danger' : '') + '" type="button" data-ed="trash" title="' + (draft.trashed ? 'Hapus permanen' : 'Pindahkan ke sampah') + '">' + icon(draft.trashed ? 'trashX' : 'trash') + '</button>' +
@@ -886,6 +904,26 @@
         state.lastFocus = null;
 
         return true;
+    }
+
+    function insertCodeBlock() {
+        var ta = editorBody();
+        if (!ta) return;
+        var start = ta.selectionStart;
+        var end = ta.selectionEnd;
+        var val = ta.value;
+        var selected = val.substring(start, end);
+        var insertion = '```\n' + (selected || '') + '\n```';
+        ta.value = val.substring(0, start) + insertion + val.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4 + (selected ? selected.length : 0);
+        ta.focus();
+
+        var draft = state.editing;
+        if (draft) {
+            draft.body = ta.value;
+            scheduleSave(200);
+        }
+        autosize(ta);
     }
 
     function toggleEditorPin() {
@@ -1426,6 +1464,10 @@
                     if (file) {
                         file.click();
                     }
+                } else if (action === 'save') {
+                    saveNow(true).then(function() { toast('Catatan tersimpan'); }).catch(function(err) { toast(err.message, 'error'); });
+                } else if (action === 'code') {
+                    insertCodeBlock();
                 } else if (action === 'archive') {
                     archiveFromEditor();
                 } else if (action === 'trash') {
