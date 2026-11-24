@@ -585,15 +585,85 @@
         };
     }
 
+    function viewerMarkup(draft) {
+        var listMode = draft.type === 'list';
+        var title = draft.title ? '<h2 class="viewer-title">' + esc(draft.title) + '</h2>' : '';
+        var body = draft.body ? renderNoteBody(draft.body) : '';
+
+        var checklist = '';
+        if (listMode && draft.items && draft.items.length) {
+            checklist = '<div class="note-checklist viewer-checklist">' + draft.items.map(function (item, index) {
+                return '<div class="check-row' + (item.checked ? ' done' : '') + '" data-viewer-check="' + index + '" role="button" tabindex="0">' +
+                    '<span class="check-box">' + (item.checked ? icon('check') : '') + '</span>' +
+                    '<span>' + esc(item.content) + '</span>' +
+                    '</div>';
+            }).join('') + '</div>';
+        }
+
+        var attachments = '';
+        if (draft.attachments && draft.attachments.length) {
+            attachments = '<div class="viewer-attachments">' + draft.attachments.map(function (att) {
+                return '<div class="attachment-tile"><img src="' + esc(att.url || att.thumb) + '" alt=""></div>';
+            }).join('') + '</div>';
+        }
+
+        var chips = '';
+        if (draft.labels && draft.labels.length) {
+            chips = '<div class="note-chips">' + draft.labels.map(function (label) {
+                return '<span class="chip">' + esc(label.name) + '</span>';
+            }).join('') + '</div>';
+        }
+
+        var empty = (!draft.title && !draft.body && !checklist && !attachments)
+            ? '<p class="note-body note-empty">Catatan kosong</p>'
+            : '';
+
+        return '<div class="editor" data-color="' + esc(draft.color) + '" role="dialog" aria-modal="true" aria-label="Detail catatan">' +
+            '<div class="editor-top">' +
+            '<button class="icon-btn editor-pin' + (draft.pinned ? ' is-active' : '') + '" type="button" data-view-action="pin" title="Sematkan catatan" aria-pressed="' + draft.pinned + '">' + icon('pin') + '</button>' +
+            '<button class="btn btn-primary btn-sm" type="button" data-view-action="edit" style="margin-left: auto; margin-right: 6px;">' + icon('pencil') + ' Edit</button>' +
+            '<button class="icon-btn editor-close" type="button" data-view-action="close" aria-label="Tutup">' + icon('x') + '</button>' +
+            '</div>' +
+            '<div class="viewer-content">' +
+            title + body + attachments + checklist + empty + chips +
+            '</div>' +
+            '<div class="editor-toolbar">' +
+            '<div class="editor-tools">' +
+            '<button class="editor-tool" type="button" data-view-action="archive" title="' + (draft.archived ? 'Keluarkan dari arsip' : 'Arsipkan') + '">' + icon('archive') + '</button>' +
+            '<button class="editor-tool danger" type="button" data-view-action="trash" title="' + (draft.trashed ? 'Hapus permanen' : 'Pindahkan ke sampah') + '">' + icon(draft.trashed ? 'trashX' : 'trash') + '</button>' +
+            '</div>' +
+            '<button class="editor-close-btn" type="button" data-view-action="close">Tutup</button>' +
+            '</div>' +
+            '</div>';
+    }
+
+    function switchToEditMode() {
+        var draft = state.editing;
+        if (!draft) return;
+        el.editorHost.innerHTML = editorMarkup(draft);
+        renderChecks();
+        renderAttachments();
+        renderEditorLabels();
+        autosize(editorBody());
+        window.setTimeout(function () {
+            var title = editorTitle();
+            if (title) {
+                title.focus();
+                title.setSelectionRange(title.value.length, title.value.length);
+            }
+        }, 70);
+    }
+
     function openEditor(note) {
         closePopover();
+        var isNew = !note;
         state.editing = cloneNote(note);
         state.dirty = false;
         state.force = false;
         state.needsReload = false;
         state.lastFocus = document.activeElement;
 
-        if (!note) {
+        if (isNew) {
             state.view = 'notes';
             var label = currentLabel();
             if (label) {
@@ -605,23 +675,26 @@
             });
         }
 
-        el.editorHost.innerHTML = editorMarkup(state.editing);
         el.editorModal.classList.add('is-open');
         el.editorModal.setAttribute('aria-hidden', 'false');
         updateScrollLock();
 
-        renderChecks();
-        renderAttachments();
-        renderEditorLabels();
-        autosize(editorBody());
-
-        window.setTimeout(function () {
-            var title = editorTitle();
-            if (title) {
-                title.focus();
-                title.setSelectionRange(title.value.length, title.value.length);
-            }
-        }, 70);
+        if (isNew) {
+            el.editorHost.innerHTML = editorMarkup(state.editing);
+            renderChecks();
+            renderAttachments();
+            renderEditorLabels();
+            autosize(editorBody());
+            window.setTimeout(function () {
+                var title = editorTitle();
+                if (title) {
+                    title.focus();
+                    title.setSelectionRange(title.value.length, title.value.length);
+                }
+            }, 70);
+        } else {
+            el.editorHost.innerHTML = viewerMarkup(state.editing);
+        }
     }
 
     function openEditorById(id) {
@@ -1468,6 +1541,23 @@
                     saveNow(true).then(function() { toast('Catatan tersimpan'); }).catch(function(err) { toast(err.message, 'error'); });
                 } else if (action === 'code') {
                     insertCodeBlock();
+                } else if (action === 'archive') {
+                    archiveFromEditor();
+                } else if (action === 'trash') {
+                    trashFromEditor();
+                }
+                return;
+            }
+
+            var viewAction = event.target.closest('[data-view-action]');
+            if (viewAction) {
+                var action = viewAction.getAttribute('data-view-action');
+                if (action === 'close') {
+                    closeEditor();
+                } else if (action === 'pin') {
+                    toggleEditorPin();
+                } else if (action === 'edit') {
+                    switchToEditMode();
                 } else if (action === 'archive') {
                     archiveFromEditor();
                 } else if (action === 'trash') {

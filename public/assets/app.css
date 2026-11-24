@@ -2895,3 +2895,26 @@ kbd {
     color: var(--accent-strong);
 }
 
+.viewer-content {
+    padding: 8px 20px 16px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.viewer-title {
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: -.02em;
+    margin: 4px 0 12px;
+    color: var(--ink);
+    word-break: break-word;
+}
+
+.viewer-checklist {
+    margin-top: 12px;
+}
+
+    color: var(--accent-strong);
+}
+
